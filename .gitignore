@@ -1,0 +1,37 @@
+# secrets — never commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+token
+.netrc
+.git-credentials
+
+# agency-os runtime state (mirrors, cache, logs, pid)
+.agency-os/
+agency-os-data/
+*.log
+*.pid
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# node (only ever used for syntax checks)
+node_modules/
+package-lock.json
+
+# editors / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# local measurement artefacts
+/tmp/
+*.png.tmp
