@@ -167,7 +167,8 @@ def cmd_up(args) -> int:
         print(f"already running (pid {pid}) · {local_url(cfg)}")
         return 0
     if not port_free(cfg.host, cfg.port):
-        print(f"port {cfg.port} is already in use", file=sys.stderr)
+        print(f"port {cfg.port} is already in use — another daemon may be running; "
+              f"try `agencyos up --port {cfg.port + 1}`", file=sys.stderr)
         return 2
     lp = log_path(cfg)
     lp.parent.mkdir(parents=True, exist_ok=True)
@@ -237,6 +238,17 @@ def cmd_status(args) -> int:
     print(f"  config   {args.config or CONFIG_PATH}")
     print(f"  data     {cfg.data_dir}")
     print(f"  process  {'pid ' + str(pid) if pid else 'not running'}")
+    if not pid:
+        # Do not present someone else's daemon as this installation's.
+        url = local_url(cfg)
+        try:
+            info = http_json(url + "/api/ping", timeout=2)
+            print(f"  http     {url} answers (uptime {info['uptime_s']}s) — started elsewhere, "
+                  f"not by this install")
+            print(f"  hint     agencyos up --port {cfg.port + 1}")
+        except Exception:
+            print("  http     not listening")
+        return 0
     try:
         info = http_json(local_url(cfg) + "/api/ping")
         summ = http_json(local_url(cfg) + "/api/summary", timeout=6)
