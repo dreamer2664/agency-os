@@ -22,6 +22,10 @@ quorum, 45-minute silence, ROOKIE → RETIRED, directive epoch, red lines.
 └──────────────────── taskbar · daemon 25 MB · silence 6h 08m · 13:17 UTC ─────┘
 ```
 
+![The command deck: the organisation's state, the board with a card open, and the surveillance
+column showing accountability, alerts and standing law — all read from the agency's own
+repositories](docs/img/deck.png)
+
 ---
 
 ## Install (Debian 13 / Ubuntu 22.04+, 2 GB RAM, no desktop needed)
