@@ -26,6 +26,9 @@ quorum, 45-minute silence, ROOKIE → RETIRED, directive epoch, red lines.
 column showing accountability, alerts and standing law — all read from the agency's own
 repositories](docs/img/deck.png)
 
+**More screens:** [overview · registry · board · card drawer · review · comms · paper
+theme](docs/SCREENSHOTS.md)
+
 ---
 
 ## Install (Debian 13 / Ubuntu 22.04+, 2 GB RAM, no desktop needed)
