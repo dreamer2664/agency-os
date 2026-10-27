@@ -59,7 +59,14 @@ def main():
             # only this panel's own window: the wire archive legitimately contains the
             # word "TypeError" in messages, so the whole body is the wrong thing to grep.
             win = page.locator(f'.win[data-view="{v}"]')
-            text = win.inner_text() if win.count() else ""
+            # panels that hit the GitHub API need longer than the rest; poll instead of
+            # asserting on whatever happened to be painted at one arbitrary instant.
+            text = ""
+            for _ in range(10):
+                text = win.inner_text() if win.count() else ""
+                if len(text) > 40:
+                    break
+                page.wait_for_timeout(300)
             bad = [w for w in ("cannot reach", "failed to fetch", "cannot read this",
                                "cannot list", "is unavailable", "unexpected token")
                    if w in text.lower()]
