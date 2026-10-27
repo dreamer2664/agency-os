@@ -203,3 +203,33 @@ Notes:
   processes) — that is the browser the operator runs, not an allowance excluded from the budget.
 - Page load is the deck's own: no framework, no external fonts, no CDN. The only requests are
   `index.html`, `app.css`, 11 ES modules, `/api/summary`, and one SSE connection.
+
+## Measured 2026-10-27 15:43:38Z — kiosk
+
+Commands used (verbatim):
+
+```
+scripts/measure.sh --seconds 8 --seconds 7
+```
+
+| quantity | value |
+|---|---|
+| host RAM | 1982.8 MB (6.1.158+) |
+| browser | `chromium` (Chromium 156.0.8078.47 built on Debian GNU/Linux 13 (trixie)) |
+| samples | 7 × 1 s after a 3 s warm-up |
+| agencyd (1 process) PSS | baseline 24.1 MB → median 24.8 MB, peak 24.8 MB |
+| agencyd RSS | baseline 32.0 MB |
+| browser tree PSS | median 313.7 MB, peak 320.6 MB |
+| browser tree summed RSS | median 337.1 MB, peak 344.1 MB |
+| **total PSS (daemon + browser)** | **median 338.5 MB, peak 345.3 MB** |
+| `/api/summary` payload | 3947 bytes |
+
+Notes:
+- PSS divides shared pages between the processes that map them; summed RSS counts them once per
+  process. For a Chromium with several helper processes the RSS sum overstates usage by 2–3×,
+  so the PSS column is the honest total. Both are printed.
+- The daemon figure is its whole process tree; it is a single Python process by design.
+- The browser figure includes Chromium's own baseline (renderer, GPU-less compositor, utility
+  processes) — that is the browser the operator runs, not an allowance excluded from the budget.
+- Page load is the deck's own: no framework, no external fonts, no CDN. The only requests are
+  `index.html`, `app.css`, 11 ES modules, `/api/summary`, and one SSE connection.

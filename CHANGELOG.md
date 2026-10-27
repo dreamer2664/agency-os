@@ -48,7 +48,11 @@ First working environment. Built, installed and measured against the live agency
   read at startup).
 - `Escape` closes the task drawer, as it already did the palette and other overlays.
 - `agencyos status` reports the port the daemon was actually started on (`up --port 8899`) instead
-  of the configured one, and prints both RSS and PSS.
+  of the configured one, prints both RSS and PSS, and no longer presents a daemon started by a
+  *different* installation as its own ("started elsewhere, not by this install").
+- Kiosk: Chromium's "unsupported command-line flag" infobar no longer covers the top of the deck
+  (`--test-type` when `--no-sandbox` is needed), and a single-process start-up segfault now falls
+  back to multi-process with a message instead of leaving a blank display.
 
 ### Known limitations
 - Write mode requires a fine-grained PAT; there is no OAuth flow.

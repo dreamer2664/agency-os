@@ -78,8 +78,14 @@ agencyos kiosk --browser firefox          # heavier, but if Chromium misbehaves
 ```
 
 `Xvfb :99 -screen 0 1440x900x24 &` then `DISPLAY=:99 agencyos kiosk --display :99` to use your own
-X server. In a container, Chromium needs `--no-sandbox`; the kiosk script already passes it (the
-page is local, static and same-origin only).
+X server. In a container, Chromium needs `--no-sandbox`; the script adds it (with `--test-type`, so
+the "unsupported flag" infobar does not cover the deck) whenever user namespaces are unavailable.
+
+**Chromium dies immediately in kiosk mode.** `--single-process` is a large memory win but is
+known to segfault on some kernels during start-up. The script watches the first four seconds and,
+if the single-process browser exits, relaunches multi-process and says so on stdout ("retrying
+multi-process (higher memory)"). The log is `/tmp/agencyos-kiosk.log`. If it fails both ways, run
+`scripts/kiosk.sh --browser firefox` or simply open the URL in the browser you already have.
 
 ## Memory
 

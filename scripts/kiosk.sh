@@ -70,18 +70,43 @@ case "$BROWSER_PREF" in
   chromium*)
     BIN=$(command -v chromium || command -v chromium-browser) || {
       echo "chromium not found" >&2; exit 1; }
+    BASE=(--disable-dev-shm-usage --disable-gpu --in-process-gpu
+          --disable-extensions --disable-sync --disable-background-networking
+          --disable-component-update --disable-default-apps --disable-breakpad
+          --metrics-recording-only --mute-audio --no-pings --disable-domain-reliability
+          --no-first-run --no-default-browser-check --disable-translate
+          --js-flags=--max-old-space-size=64
+          --disable-features=Translate,MediaRouter,OptimizationHints,GlobalMediaControls,CalculateNativeWinOcclusion,BackForwardCache
+          --user-data-dir="$PROFILE" --window-position=0,0 --window-size="${W},${H}"
+          --start-fullscreen --app="$URL")
+    # In a container or as an unprivileged user without user namespaces, Chromium
+    # needs --no-sandbox; --test-type suppresses the "unsupported flag" infobar it
+    # would otherwise draw across the top of the deck.
+    if [ "$(id -u)" = "0" ] || [ ! -e /proc/sys/kernel/unprivileged_userns_clone ] \
+       || [ "$(cat /proc/sys/kernel/unprivileged_userns_clone 2>/dev/null || echo 1)" = "0" ]; then
+      BASE+=(--no-sandbox --test-type)
+    fi
+
+    launch() {  # $@: extra flags
+      "$BIN" "${BASE[@]}" "$@" >/tmp/agencyos-kiosk.log 2>&1 &
+      BPID=$!
+    }
+
     say "chromium kiosk (single process, lean flags) → ${URL}"
-    "$BIN" --no-sandbox --disable-dev-shm-usage --disable-gpu --in-process-gpu \
-      --single-process --no-zygote \
-      --disable-extensions --disable-sync --disable-background-networking \
-      --disable-component-update --disable-default-apps --disable-breakpad \
-      --metrics-recording-only --mute-audio --no-pings --disable-domain-reliability \
-      --no-first-run --no-default-browser-check --disable-translate --disable-infobars \
-      --js-flags=--max-old-space-size=64 \
-      --disable-features=Translate,MediaRouter,OptimizationHints,GlobalMediaControls,CalculateNativeWinOcclusion,BackForwardCache \
-      --user-data-dir="$PROFILE" --window-position=0,0 --window-size="${W},${H}" \
-      --start-fullscreen --app="$URL" >/tmp/agencyos-kiosk.log 2>&1 &
-    BPID=$!
+    launch --single-process --no-zygote
+    # --single-process is a large memory win but crashes on some kernels during
+    # startup. If it does not survive the first seconds, fall back and say so
+    # rather than leaving a blank display.
+    for _ in 1 2 3 4; do
+      sleep 1
+      kill -0 "$BPID" 2>/dev/null || break
+    done
+    if ! kill -0 "$BPID" 2>/dev/null; then
+      say "chromium exited in single-process mode — retrying multi-process (higher memory)"
+      PROFILE=$(mktemp -d /tmp/agencyos-kiosk.XXXXXX)
+      BASE=("${BASE[@]/--user-data-dir=*/--user-data-dir=$PROFILE}")
+      launch
+    fi
     ;;
   firefox*)
     BIN=$(command -v firefox-esr || command -v firefox) || {
@@ -104,6 +129,11 @@ PREFS
   *) echo "unknown browser ${BROWSER_PREF}" >&2; exit 2 ;;
 esac
 
-sleep 3
-say "the deck is up. Ctrl-C here (or close the window) to end the session."
+sleep 2
+if kill -0 "$BPID" 2>/dev/null; then
+  say "the deck is up. Ctrl-C here (or close the window) to end the session."
+else
+  echo "the browser exited — see /tmp/agencyos-kiosk.log (or open ${URL} yourself)" >&2
+  exit 1
+fi
 wait "$BPID" 2>/dev/null
