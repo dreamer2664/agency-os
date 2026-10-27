@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Refuse commits that would put a credential into history.
+# Enable once per checkout:  git config core.hooksPath scripts/hooks
+set -u
+DOC_OK=".env.example README.md docs/SECURITY.md"
+fail=0
+for f in $(git diff --cached --name-only --diff-filter=ACM); do
+  case "$f" in
+    *.png|*.jpg|*.gif|*.woff*|*.pdf) continue ;;
+  esac
+  # real-looking tokens must never appear, in any file
+  if git show ":$f" 2>/dev/null | grep -Eq 'gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{30,}'; then
+    case " $DOC_OK " in
+      *" $f "*) : ;;   # the documented placeholder is allowed there and nowhere else
+      *) echo "pre-commit: possible credential in $f — refusing" >&2; fail=1 ;;
+    esac
+  fi
+  case "$f" in
+    .env|*.pem|*.key|*token*) echo "pre-commit: $f looks like a secret file — refusing" >&2; fail=1 ;;
+  esac
+done
+exit $fail
