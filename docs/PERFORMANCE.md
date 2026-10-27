@@ -9,13 +9,14 @@ Method: real `/proc` measurement, both PSS (shared pages divided between sharers
 | component | measured | share of a 300 MB budget |
 |---|---|---|
 | `agencyd` (the entire environment) | **24–30 MB**, 1 process | 8–10 % |
-| the deck over a blank page | **+42…54 MB** of browser memory | 15 % |
-| Chromium's own baseline (blank page) | **387 MB** | 129 % |
+| the deck over a blank page | **+44 MB** of browser memory | 15 % |
+| Chromium's own baseline (blank page) | **393 MB** | 131 % |
 
 The daemon is not the problem and never was. A Chromium on this host costs more than the entire
 budget before it has loaded a single byte of the deck. The closest achievable configuration —
-Chromium `--single-process` kiosk mode — lands at **326 MB median / 345 MB peak**, 8.7 % over
-target; that is what `scripts/kiosk.sh` ships and what run #1 in `MEASUREMENTS.md` shows.
+Chromium `--single-process` kiosk mode — lands at **347 MB median / 352 MB peak** on the published
+commit (326–347 MB across four runs), i.e. 15.7 % over target; that is what `scripts/kiosk.sh`
+ships and what run #1 in `MEASUREMENTS.md` shows. The target is not met.
 
 Nothing here is concealed by excluding a process: the budget line includes the browser, the
 display server is Xvfb (not a desktop environment), and the daemon figure is its whole process

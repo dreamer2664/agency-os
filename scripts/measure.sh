@@ -33,15 +33,29 @@ done
 case "${2:-}" in ""|--*) : ;; *) [ "$1" = "--seconds" ] && SECONDS_WIN="$2" ;; esac
 
 PY="${PYTHON:-python3}"
-ERR_ARGS="$*"
+# captured before any parsing: `shift` inside the loop below rewrites $@, and the
+# "commands used" line in the report must stay the command the operator typed.
+ORIG_ARGS="$*"
+ERR_ARGS="$ORIG_ARGS"
 AGENCYOS="$ROOT/bin/agencyos"
 
-if ! "$AGENCYOS" status >/dev/null 2>&1; then
-  echo "starting the daemon first"
+PIDFILE="${AGENCY_OS_HOME:-$HOME/.agency-os}/run/agencyd.pid"
+live_pid() {
+  # a pid file left behind by a killed daemon must never be measured as 0 MB
+  [ -f "$PIDFILE" ] || return 1
+  local p; p=$(cat "$PIDFILE" 2>/dev/null)
+  [ -n "$p" ] && kill -0 "$p" 2>/dev/null && printf '%s' "$p"
+}
+DPID=$(live_pid || true)
+if [ -z "$DPID" ]; then
+  echo "no live daemon — starting one"
   "$AGENCYOS" up || exit 1
+  DPID=$(live_pid || true)
 fi
-DPID=$(cat "${AGENCY_OS_HOME:-$HOME/.agency-os}/run/agencyd.pid" 2>/dev/null || true)
-[ -z "$DPID" ] && { echo "no daemon pid file"; exit 1; }
+[ -z "$DPID" ] && { echo "the daemon is not running and could not be started"; exit 1; }
+if ! curl -fsS "http://127.0.0.1:${AGENCY_OS_PORT:-8787}/api/ping" >/dev/null 2>&1; then
+  echo "the daemon pid $DPID is alive but the API does not answer — refusing to measure"; exit 1
+fi
 URL="http://127.0.0.1:${AGENCY_OS_PORT:-8787}/?boot=1"
 
 BROWSER=""

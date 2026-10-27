@@ -38,9 +38,10 @@ First working environment. Built, installed and measured against the live agency
 
 ### Measured
 - `agencyd` 24–30 MB PSS, one process (25 MB cold, ~30 MB after sustained use).
-- Deck costs +42–54 MB over a blank browser page.
-- Kiosk configuration (Chromium `--single-process`): 326 MB median / 345 MB peak total — 8.7 %
-  over the 300 MB target; the browser's own blank-page baseline is 387 MB on this host.
+- Deck costs ≈44 MB over a blank browser page.
+- Kiosk configuration (Chromium `--single-process`): 347 MB median / 352 MB peak total on the
+  published commit, 326–347 MB across four runs — 15.7 % over the 300 MB target, whose gap is the
+  browser's own 393 MB blank-page baseline, not the environment.
 
 ### Fixed
 - Deep links and back/forward now route: `#board` after boot opens the panel (the hash was only

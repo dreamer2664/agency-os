@@ -53,11 +53,18 @@ def main():
         # ---- every rail view loads without an error state -----------------
         views = ["overview", "agents", "board", "comms", "review", "repos", "records", "resources", "settings"]
         for v in views:
+            errors.clear()
             page.evaluate(f"location.hash = '#{v}'")
             page.wait_for_timeout(900)
-            text = page.inner_text("body")
-            bad = [w for w in ("Cannot ", "Unavailable", "failed to fetch", "TypeError") if w in text]
-            check(f"view '{v}' renders", not bad, ",".join(bad))
+            # only this panel's own window: the wire archive legitimately contains the
+            # word "TypeError" in messages, so the whole body is the wrong thing to grep.
+            win = page.locator(f'.win[data-view="{v}"]')
+            text = win.inner_text() if win.count() else ""
+            bad = [w for w in ("cannot reach", "failed to fetch", "cannot read this",
+                               "cannot list", "is unavailable", "unexpected token")
+                   if w in text.lower()]
+            check(f"view '{v}' renders", win.count() > 0 and len(text) > 40 and not bad and not errors,
+                  ",".join(bad) or (f"{len(text)} chars" if win.count() else "no window"))
         page.screenshot(path=f"{a.shots}/verify-settings.png")
 
         # ---- command palette ---------------------------------------------
